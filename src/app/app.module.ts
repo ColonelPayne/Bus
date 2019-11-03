@@ -1,16 +1,23 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import {ElementRef, NgModule} from '@angular/core';
 
 import { AppComponent } from './app.component';
+import {RouterModule} from '@angular/router';
+import {AppRoutingModule} from './app.routing.module';
+import {LeafletDirective, LeafletModule} from '@asymmetrik/ngx-leaflet';
+import {MapDataService} from './core/services/mapData.service';
 
 @NgModule({
   declarations: [
     AppComponent
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    RouterModule,
+    AppRoutingModule,
+    LeafletModule.forRoot()
   ],
-  providers: [],
+  providers: [MapDataService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
