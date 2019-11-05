@@ -1,16 +1,18 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ViewEncapsulation} from '@angular/core';
 import {IPath} from './core/stations.interface';
 import {busPatch} from './core/testData/busPath';
-import {icon, latLng, marker, polyline, tileLayer, Map, point} from 'leaflet';
+import {icon, latLng, marker, polyline, tileLayer, Map, point, LeafletMouseEvent} from 'leaflet';
 import {MapDataService} from './core/services/mapData.service';
 import {StandardServerResponse} from './core/serverResponse.model';
 import {from, of} from 'rxjs';
 import {concatMap, delay} from 'rxjs/operators';
+import {updateSuperClassAbstractMembersContext} from '@angular/core/schematics/migrations/static-queries/strategies/usage_strategy/super_class_context';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
+  encapsulation: ViewEncapsulation.None,
 })
 export class AppComponent implements OnInit {
   title = 'busroute';
@@ -21,6 +23,9 @@ export class AppComponent implements OnInit {
   public ready = false;
   public path = [];
   public showBus = false;
+  public showInfo = false;
+
+  public infoData = null;
   // public path: IPath[] = busPatch;
 
   streetMaps = tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -38,6 +43,8 @@ export class AppComponent implements OnInit {
 
   bus = marker([0, 0], {});
 
+
+
   route = polyline([]);
 
   layersControl = {
@@ -54,7 +61,8 @@ export class AppComponent implements OnInit {
 
   options = {};
 
-  constructor(private dataService: MapDataService) {}
+  constructor(private dataService: MapDataService) {
+  }
 
   getPath(): any {
     // return Object.keys(path).map()
@@ -76,13 +84,31 @@ export class AppComponent implements OnInit {
         })
       });
 
-      this.end = marker(obj.slice(-1).pop() as any, {
+      const end = obj.slice(-1).pop();
+
+      this.end = marker(end as any, {
         icon: icon({
           iconSize: [ 25, 41 ],
           iconAnchor: [ 13, 41 ],
           iconUrl: 'leaflet/marker-icon.png',
           shadowUrl: 'leaflet/marker-shadow.png'
         })
+      });
+
+      this.start.addEventListener('click', event => {
+        this.dataService.getPatchArrayByCoord(obj[0][0], obj[0][1]).then(async (value) => {
+          if (value.status === 'success') {
+            await this.setData(value.data[0]);
+          }
+        });
+      });
+
+      this.end.addEventListener('click', async event => {
+        await this.dataService.getPatchArrayByCoord(end[0], end[1]).then(async (value) => {
+          if (value.status === 'success') {
+            await this.setData(value.data[0]);
+          }
+        });
       });
 
       this.options = {
@@ -92,6 +118,11 @@ export class AppComponent implements OnInit {
       };
       return obj;
     });
+  }
+
+  async setData(data: IPath) {
+    this.showInfo = true;
+    this.infoData = await data;
   }
 
   onMapReady(map: Map) {
@@ -115,13 +146,19 @@ export class AppComponent implements OnInit {
           iconSize: [ 25, 41 ],
           iconAnchor: [ 13, 41 ],
           iconUrl: 'leaflet/marker-icon.png',
-          shadowUrl: 'leaflet/marker-shadow.png'
+          shadowUrl: 'leaflet/marker-shadow.png',
+          className: 'transition'
         })
+      });
+      this.dataService.getPatchArrayByCoord(timedItem[0], timedItem[1]).then(async (value) => {
+        if (value.status === 'success') {
+          await this.setData(value.data[0]);
+        }
       });
     });
   }
 
-  getCoords(event: Event) {
+  getCoords(event: LeafletMouseEvent) {
     console.log(event);
   }
 

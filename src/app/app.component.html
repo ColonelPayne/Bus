@@ -6,5 +6,15 @@
      (leafletMouseDown)="getCoords($event)">
   <div class="bus" *ngIf="showBus" [leafletLayer]="bus"></div>
 </div>
+<div class="info" id="info" *ngIf="showInfo">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <p>ID: {{infoData.id}} </p>
+      <p>lat: {{infoData.lat}} </p>
+      <p>lng: {{infoData.lng}} </p>
+      <p>Комментарий: {{infoData.name}} </p>
+    </div>
+  </div>
+</div>
 
 <button class="start-button" (click)="onStart()">Старт</button>
